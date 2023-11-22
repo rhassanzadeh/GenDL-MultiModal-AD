@@ -6,7 +6,7 @@ from sklearn.model_selection import train_test_split
 from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
 
-from utils import AverageMeter
+from utils import *
 from data_loader import sMRIDataset, FNCDataset
 from models.networks import *
 
@@ -177,6 +177,31 @@ class Trainer(object):
                 fake_FNC = self.G_sMRI2FNC(real_sMRI)
                 fake_sMRI = self.G_FNC2sMRI(real_FNC)
                 
+                if batch_index % 10 == 0:
+                    slice_no = 60 # the 60th slice
+                    
+                    real_sMRI_mean = torch.mean(real_sMRI, dim=0).detach().cpu().numpy()
+                    fake_sMRI_mean = torch.mean(fake_sMRI, dim=0).detach().cpu().numpy()
+                    
+                    self.writer.add_image('Train/sMRI_Real', real_sMRI_mean[:,:,slice_no,:], global_step=batch_index + (epoch-1))
+                    self.writer.add_image('Train/sMRI_Fake', fake_sMRI_mean[:,:,slice_no,:], global_step=batch_index + (epoch-1))
+                    
+                    real_FNC_mean = torch.mean(real_FNC, dim=0).detach().cpu().numpy()
+                    real_FNC_heatmap = np.zeros((53, 53))
+                    real_FNC_heatmap[np.triu_indices(53, 1)] = real_FNC_mean
+                    real_FNC_heatmap = real_FNC_heatmap + real_FNC_heatmap.T
+                    fake_FNC_heatmap = np.zeros((53, 53))
+                    fake_FNC_mean = torch.mean(fake_FNC, dim=0).detach().cpu().numpy()
+                    fake_FNC_heatmap[np.triu_indices(53, 1)] = fake_FNC_mean
+                    fake_FNC_heatmap = fake_FNC_heatmap + fake_FNC_heatmap.T
+
+                    real_FNC_heatmap_tensor = apply_colormap(real_FNC_heatmap)
+                    fake_FNC_heatmap_tensor = apply_colormap(fake_FNC_heatmap)
+
+                    self.writer.add_image('Train/FNC_Real', real_FNC_heatmap_tensor, global_step=batch_index + (epoch-1))
+                    self.writer.add_image('Train/FNC_Fake', fake_FNC_heatmap_tensor, global_step=batch_index + (epoch-1))
+                    
+                
                 # GAN loss
                 loss_GAN_sMRI2FNC = self.criterion_GAN(self.D_FNC(fake_FNC), torch.ones_like(self.D_FNC(fake_FNC)))
                 loss_GAN_FNC2sMRI = self.criterion_GAN(self.D_sMRI(fake_sMRI), torch.ones_like(self.D_sMRI(fake_sMRI)))
@@ -188,7 +213,7 @@ class Trainer(object):
                 loss_cycle_FNC = self.criterion_cycle(recovered_FNC, real_FNC)
                 
                 # Total loss
-                loss_G = loss_GAN_sMRI2FNC + loss_GAN_FNC2sMRI + loss_cycle_sMRI + loss_cycle_FNC
+                loss_G = (loss_GAN_sMRI2FNC + loss_GAN_FNC2sMRI + loss_cycle_sMRI + loss_cycle_FNC) * 0.25
                 loss_G.backward()
                 self.optimizer_G.step()
                 
@@ -210,7 +235,7 @@ class Trainer(object):
                 self.optimizer_D.step()
                     
                     
-                loss = loss_G + loss_D
+                loss = (loss_G + loss_D) * 0.5
                 
                 # update metric
                 losses.update(loss.item(), batch_size)
@@ -222,6 +247,18 @@ class Trainer(object):
                 
                 pbar.set_description(("{:.1f}s - loss: {:.3f}".format(batch_time.val, losses.val)))
                 pbar.update(batch_size)
+                
+                self.writer.add_scalar('Train/loss_GAN_sMRI2FNC', loss_GAN_sMRI2FNC.item(), global_step=batch_index + (epoch-1))
+                self.writer.add_scalar('Train/loss_GAN_FNC2sMRI', loss_GAN_FNC2sMRI.item(), global_step=batch_index + (epoch-1))
+                self.writer.add_scalar('Train/loss_cycle_sMRI', loss_cycle_sMRI.item(), global_step=batch_index + (epoch-1))
+                self.writer.add_scalar('Train/loss_cycle_FNC', loss_cycle_FNC.item(), global_step=batch_index + (epoch-1))
+                self.writer.add_scalar('Train/loss_G', loss_D.item(), global_step=batch_index + (epoch-1))
+                self.writer.add_scalar('Train/loss_D_sMRI_real', loss_D_sMRI_real.item(), global_step=batch_index + (epoch-1))
+                self.writer.add_scalar('Train/loss_D_sMRI_fake', loss_D_sMRI_fake.item(), global_step=batch_index + (epoch-1))
+                self.writer.add_scalar('Train/loss_D_FNC_real', loss_D_FNC_real.item(), global_step=batch_index + (epoch-1))
+                self.writer.add_scalar('Train/loss_D_FNC_fake', loss_D_FNC_fake.item(), global_step=batch_index + (epoch-1))
+                self.writer.add_scalar('Train/loss_D', loss_D.item(), global_step=batch_index + (epoch-1))
+                self.writer.add_scalar('Train/loss_total', loss.item(), global_step=batch_index + (epoch-1))
              
         # Write in tensorboard
         self.writer.add_scalar('Loss/train', losses.avg, epoch)
@@ -249,6 +286,31 @@ class Trainer(object):
                 fake_FNC = self.G_sMRI2FNC(real_sMRI)
                 fake_sMRI = self.G_FNC2sMRI(real_FNC)
                 
+                if batch_index % 10 == 0:
+                    slice_no = 60 # the 60th slice
+                    
+                    real_sMRI_mean = torch.mean(real_sMRI, dim=0).detach().cpu().numpy()
+                    fake_sMRI_mean = torch.mean(fake_sMRI, dim=0).detach().cpu().numpy()
+                    
+                    self.writer.add_image('Valid/sMRI_Real', real_sMRI_mean[:,:,slice_no,:], global_step=batch_index + (epoch-1))
+                    self.writer.add_image('Valid/sMRI_Fake', fake_sMRI_mean[:,:,slice_no,:], global_step=batch_index + (epoch-1))
+                    
+                    real_FNC_mean = torch.mean(real_FNC, dim=0).detach().cpu().numpy()
+                    real_FNC_heatmap = np.zeros((53, 53))
+                    real_FNC_heatmap[np.triu_indices(53, 1)] = real_FNC_mean
+                    real_FNC_heatmap = real_FNC_heatmap + real_FNC_heatmap.T
+                    fake_FNC_heatmap = np.zeros((53, 53))
+                    fake_FNC_mean = torch.mean(fake_FNC, dim=0).detach().cpu().numpy()
+                    fake_FNC_heatmap[np.triu_indices(53, 1)] = fake_FNC_mean
+                    fake_FNC_heatmap = fake_FNC_heatmap + fake_FNC_heatmap.T
+
+                    real_FNC_heatmap_tensor = apply_colormap(real_FNC_heatmap)
+                    fake_FNC_heatmap_tensor = apply_colormap(fake_FNC_heatmap)
+
+                    self.writer.add_image('Valid/FNC_Real', real_FNC_heatmap_tensor, global_step=batch_index + (epoch-1))
+                    self.writer.add_image('Valid/FNC_Fake', fake_FNC_heatmap_tensor, global_step=batch_index + (epoch-1))
+
+                
                 # GAN loss
                 loss_GAN_sMRI2FNC = self.criterion_GAN(self.D_FNC(fake_FNC), torch.ones_like(self.D_FNC(fake_FNC)))
                 loss_GAN_FNC2sMRI = self.criterion_GAN(self.D_sMRI(fake_sMRI), torch.ones_like(self.D_sMRI(fake_sMRI)))
@@ -259,7 +321,7 @@ class Trainer(object):
                 loss_cycle_sMRI = self.criterion_cycle(recovered_sMRI, real_sMRI)
                 loss_cycle_FNC = self.criterion_cycle(recovered_FNC, real_FNC)
                 
-                loss_G = loss_GAN_sMRI2FNC + loss_GAN_FNC2sMRI + loss_cycle_sMRI + loss_cycle_FNC
+                loss_G = (loss_GAN_sMRI2FNC + loss_GAN_FNC2sMRI + loss_cycle_sMRI + loss_cycle_FNC) * 0.25
                 
                 # Discriminator sMRI loss
                 loss_D_sMRI_real = self.criterion_GAN(self.D_sMRI(real_sMRI), torch.ones_like(self.D_sMRI(real_sMRI)))
@@ -273,14 +335,14 @@ class Trainer(object):
                 
                 loss_D = (loss_D_sMRI + loss_D_FNC) * 0.5
                 
-                loss = loss_G + loss_D
+                loss = (loss_G + loss_D) * 0.5
                 
                 # update metric
                 losses.update(loss.item(), batch_size)
                 
 
             # Write in tensorboard
-            self.writer.add_scalar('Loss/valid', losses.avg, epoch)
+            self.writer.add_scalar('Valid/loss', losses.avg, epoch)
 
         return losses.avg
 
