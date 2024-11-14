@@ -22,19 +22,18 @@
    git clone https://github.com/rhassanzadeh/GenDL-MultiModal-AD.git
    cd GenDL-MultiModal-AD
 
-
 ## Trian Model:
-To train the generative model for multimodal data imputation:
-```bash
-python scripts/train_model.py --config configs/model_config.yaml
+1. **To train the generative model for multimodal data imputation**:
+   ```bash
+   python scripts/train_model.py --config configs/model_config.yaml
 
 ## Test Model:
-Test Model
-```bash
-Evaluate the model on test data:
+1. **Test Model**:
+   ```bash
+   Evaluate the model on test data:
 
 ## Example Command
-Here’s a sample command to run the entire pipeline:
-```bash
-python main.py --data data/processed --train --test --output results/
+1. **Here’s a sample command to run the entire pipeline**:
+   ```bash
+   python main.py --data data/processed --train --test --output results/
 
