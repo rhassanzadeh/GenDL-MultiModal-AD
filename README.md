@@ -11,9 +11,9 @@
 ## Project Structure
 - **`models/`**: Contains model architectures and networks.
 - **`config.py`**: Configuration settings for training and evaluation.
-- **`trainer.py`**: Data loading and preprocessing scripts.
+- **`trainer.py`**: Training loop and logging functions.
 - **`main.py`**: Main entry point for running experiments.
-- **`data_loader.py`**: Training loop and logging functions.
+- **`data_loader.py`**: Data loading and preprocessing scripts.
 - **`utils.py/`**: Utility functions and helper scripts for data handling, visualization, and performance metrics.
 
 
