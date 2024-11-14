@@ -16,24 +16,25 @@
 - **`data_loader.py`**:
 - **`utils.py/`**: Utility functions and helper scripts for data handling, visualization, and performance metrics.
 
+├── models/                     # Contains model architectures (e.g., cGAN, VAE)
+├── config.py                   # Configuration settings for training and evaluation
+├── data_loader.py              # Data loading and preprocessing scripts
+├── main.py                     # Main entry point for running experiments
+├── trainer.py                  # Training loop and logging functions
+├── utils.py                    # Utility functions (e.g., for logging, data handling)
+└── README.md                   # Project documentation
+
+
 ## Installation and Setup
 1. **Clone the repository**:
    ```bash
    git clone https://github.com/rhassanzadeh/GenDL-MultiModal-AD.git
    cd GenDL-MultiModal-AD
 
-## Trian Model:
-1. **To train the generative model for multimodal data imputation**:
-   ```bash
-   python scripts/train_model.py --config configs/model_config.yaml
-
-## Test Model:
-1. **Test Model**:
-   ```bash
-   Evaluate the model on test data:
-
 ## Example Command
-1. **Here’s a sample command to run the entire pipeline**:
+1. **To train a model, use the following command:**:
    ```bash
-   python main.py --data data/processed --train --test --output results/
-
+   python main.py --is_train True
+2. **To test a model, use the following command:**:
+   ```bash
+   python main.py --is_train False
